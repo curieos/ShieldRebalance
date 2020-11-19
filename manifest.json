@@ -1,0 +1,10 @@
+{
+    "name": "ShieldRebalance",
+    "version_number": "0.1.2",
+    "website_url": "",
+    "description": "Mod to re-balance OSP and shields",
+    "dependencies": [
+		"bbepis-BepInExPack-5.3.1",
+		"tristanmcpherson-R2API-2.5.14"
+    ]
+}
