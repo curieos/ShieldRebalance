@@ -15,7 +15,7 @@ namespace ShieldRebalance
     [BepInPlugin(ModGuid, ModName, ModVer)]
     public class ShieldRebalance : BaseUnityPlugin
     {
-        private const string ModVer = "0.1.3";
+        private const string ModVer = "0.1.4";
         private const string ModName = "ShieldRebalance";
         public const string ModGuid = "com.CurieOS.ShieldRebalance";
 
