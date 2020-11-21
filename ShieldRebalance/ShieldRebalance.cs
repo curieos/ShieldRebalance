@@ -15,7 +15,7 @@ namespace ShieldRebalance
     [BepInPlugin(ModGuid, ModName, ModVer)]
     public class ShieldRebalance : BaseUnityPlugin
     {
-        private const string ModVer = "0.1.4";
+        private const string ModVer = "0.1.5";
         private const string ModName = "ShieldRebalance";
         public const string ModGuid = "com.CurieOS.ShieldRebalance";
 
@@ -92,29 +92,34 @@ namespace ShieldRebalance
 				);
 				if (ILFound)
 				{
+					cursor.Emit(OpCodes.Ldc_R4, 0f);
 					cursor.Emit(OpCodes.Ldarg_0);
-					cursor.Emit(OpCodes.Ldarg_1);
+					cursor.Emit(OpCodes.Ldloc, 5);
 					cursor.Emit(OpCodes.Ldarg_0);
 					cursor.Emit(OpCodes.Ldfld, typeof(HealthComponent).GetFieldCached("serverDamageTakenThisUpdate"));
-					cursor.EmitDelegate<Action<HealthComponent, DamageInfo, float>>((healthComponent, damageInfo, serverDamageTakenThisUpdate) =>
+					cursor.EmitDelegate<Func<HealthComponent, float, float, float>>((healthComponent, damage, serverDamageTakenThisUpdate) =>
 					{
 						if (!healthComponent) {
-							return;
+							return damage;
 						}
 						AdditionalShieldInfo asi = null;
                         if(shieldInfoAttachments.TryGetValue(healthComponent, out asi))
 						{
 							if (asi.hadShields)
 							{
-								if (damageInfo.damage > healthComponent.combinedHealth)
+								if (damage >= healthComponent.combinedHealth)
 								{
-									Chat.AddMessage("OSP Triggered off Shields.");
 									float healthDamage = Mathf.Max(0f, -((healthComponent.fullHealth * healthComponent.body.oneShotProtectionFraction) - healthComponent.health));
-									damageInfo.damage = healthComponent.shield + healthDamage;
+									damage = healthComponent.shield + healthDamage;
+									Chat.AddMessage("OSP Triggered off Shields, Damage Reduced to:" + damage);
+									return damage;
 								}
 							}
 						}
+						return damage;
 					});
+					cursor.Emit(OpCodes.Stloc, 5);
+					Debug.Log(il.ToString());
 				}
 				else
 				{
