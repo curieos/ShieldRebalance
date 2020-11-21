@@ -12,3 +12,4 @@ So far all it does it spit out a chat message if OSP triggers. Logic is still a 
 - v0.1.0 Initial release, main feature not implemented.
 - v0.1.1 A shot in the dark for working logic. I figured out crits are wonky so it doesn't trigger correctly.
 - v0.1.2 Reworked the system for checking if you have shields. Now checks if you had shields at the start of the update like it should.
+- v0.1.3 Fix floating point and integer math issue. Now sets crit to false if OSP triggers
