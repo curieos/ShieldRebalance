@@ -1,7 +1,7 @@
 {
     "name": "ShieldRebalance",
-    "version_number": "0.1.5",
-    "website_url": "",
+    "version_number": "0.2.0",
+    "website_url": "https://github.com/curieos/ShieldRebalance",
     "description": "Mod to re-balance OSP and shields",
     "dependencies": [
 		"bbepis-BepInExPack-5.3.1",

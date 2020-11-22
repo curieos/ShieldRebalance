@@ -11,29 +11,29 @@ using UnityEngine.Networking;
 
 namespace ShieldRebalance
 {
-    [BepInDependency(R2API.R2API.PluginGUID)]
-    [BepInPlugin(ModGuid, ModName, ModVer)]
-    public class ShieldRebalance : BaseUnityPlugin
-    {
-        private const string ModVer = "0.1.5";
-        private const string ModName = "ShieldRebalance";
-        public const string ModGuid = "com.CurieOS.ShieldRebalance";
+	[BepInDependency(R2API.R2API.PluginGUID)]
+	[BepInPlugin(ModGuid, ModName, ModVer)]
+	public class ShieldRebalance : BaseUnityPlugin
+	{
+		private const string ModVer = "0.2.0";
+		private const string ModName = "ShieldRebalance";
+		public const string ModGuid = "com.CurieOS.ShieldRebalance";
 
 		public class AdditionalShieldInfo : R2API.Networking.Interfaces.ISerializableObject {
-            public bool hadShields = false; 
+			public bool hadShields = false; 
 
-            public void Deserialize(NetworkReader reader) {
-                hadShields = reader.ReadBoolean(); 
-            }
+			public void Deserialize(NetworkReader reader) {
+				hadShields = reader.ReadBoolean(); 
+			}
 
-            public void Serialize(NetworkWriter writer) {
-                writer.Write(hadShields); 
-            }
-        }
-        private readonly ConditionalWeakTable<object, AdditionalShieldInfo> shieldInfoAttachments = new ConditionalWeakTable<object, AdditionalShieldInfo>();
+			public void Serialize(NetworkWriter writer) {
+				writer.Write(hadShields); 
+			}
+		}
+		private readonly ConditionalWeakTable<object, AdditionalShieldInfo> shieldInfoAttachments = new ConditionalWeakTable<object, AdditionalShieldInfo>();
 
-        public void Awake()
-        {
+		public void Awake()
+		{
 			IL.RoR2.HealthComponent.ServerFixedUpdate += (il) =>
 			{
 				ILCursor cursor = new ILCursor(il);
@@ -51,11 +51,16 @@ namespace ShieldRebalance
 					cursor.Emit(OpCodes.Ldarg_0);
 					cursor.EmitDelegate<Action<HealthComponent>>((healthComponent) =>
 					{
-						if (!healthComponent) {
+						if (!healthComponent)
+						{
+							return;
+						}
+						if (!healthComponent.body.hasOneShotProtection)
+						{
 							return;
 						}
 						AdditionalShieldInfo asi = null;
-                        if(!shieldInfoAttachments.TryGetValue(healthComponent, out asi))
+						if(!shieldInfoAttachments.TryGetValue(healthComponent, out asi))
 						{
 							asi = new AdditionalShieldInfo();
 							asi.hadShields = healthComponent.shield > 0;
@@ -70,11 +75,11 @@ namespace ShieldRebalance
 				else
 				{
 					Debug.LogError("ShieldRebalance: failed to apply IL patch (HealthComponent.ServerFixedUpdate)! Mod will not work.");
-                    return;
+					return;
 				}
 			};
 
-            IL.RoR2.HealthComponent.TakeDamage += (il) =>
+			IL.RoR2.HealthComponent.TakeDamage += (il) =>
 			{
 				ILCursor cursor = new ILCursor(il);
 				bool ILFound = cursor.TryGotoNext(
@@ -92,7 +97,6 @@ namespace ShieldRebalance
 				);
 				if (ILFound)
 				{
-					cursor.Emit(OpCodes.Ldc_R4, 0f);
 					cursor.Emit(OpCodes.Ldarg_0);
 					cursor.Emit(OpCodes.Ldloc, 5);
 					cursor.Emit(OpCodes.Ldarg_0);
@@ -103,7 +107,7 @@ namespace ShieldRebalance
 							return damage;
 						}
 						AdditionalShieldInfo asi = null;
-                        if(shieldInfoAttachments.TryGetValue(healthComponent, out asi))
+						if(shieldInfoAttachments.TryGetValue(healthComponent, out asi))
 						{
 							if (asi.hadShields)
 							{
@@ -112,6 +116,7 @@ namespace ShieldRebalance
 									float healthDamage = Mathf.Max(0f, -((healthComponent.fullHealth * healthComponent.body.oneShotProtectionFraction) - healthComponent.health));
 									damage = healthComponent.shield + healthDamage;
 									Chat.AddMessage("OSP Triggered off Shields, Damage Reduced to:" + damage);
+									healthComponent.InvokeMethod("TriggerOneShotProtection");
 									return damage;
 								}
 							}
@@ -119,14 +124,13 @@ namespace ShieldRebalance
 						return damage;
 					});
 					cursor.Emit(OpCodes.Stloc, 5);
-					Debug.Log(il.ToString());
 				}
 				else
 				{
 					Debug.LogError("ShieldRebalance: failed to apply IL patch (HealthComponent.TakeDamage)! Mod will not work.");
-                    return;
+					return;
 				}
 			};
-        }
-    }
+		}
+	}
 }
